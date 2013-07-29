@@ -1,0 +1,25 @@
+library Hashtable
+    //! runtextmacro Array("Hashtable","hashtable","null","255","")
+    //! runtextmacro Array("HashtableRecycle","hashtable","null","255","")
+    
+    struct Hashtable extends array
+        static method operator new takes nothing returns hashtable
+            local hashtable new = null
+            
+            if (not HashtableArray.full) then
+                set new = InitHashtable()
+                call HashtableArray.push(new)
+            elseif (not HashtableArray.empty) then
+                set new = HashtableRecycleArray.pop()
+                call HashtableArray.push(new)
+            endif
+            
+            return new
+        endmethod
+        
+        static method operator delete= takes hashtable toRemove returns nothing
+            call HashtableArray.remove(toRemove)
+            call HashtableRecycleArray.push(toRemove)
+        endmethod
+    endstruct
+endlibrary

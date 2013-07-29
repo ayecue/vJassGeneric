@@ -1,0 +1,37 @@
+library InstanceHandler
+    module InstanceHandler
+        static thistype array aFreeInstance
+        static integer iFreeInstanceSize=0x00
+        static integer iInstanceSize    =0x00
+        
+        static method allocate takes nothing returns integer
+            if (.iFreeInstanceSize>0x00) then
+                set .iFreeInstanceSize=.iFreeInstanceSize-0x01
+                return .aFreeInstance[.iFreeInstanceSize]
+            debug elseif (.iInstanceSize==JASS_MAX_ARRAY_SIZE) then
+            debug call BJDebugMsg("InstanceHandler: Instance size over 8190")
+            debug return -0x01
+            endif
+            
+            set .iInstanceSize=.iInstanceSize+0x01
+            return .iInstanceSize-0x01
+        endmethod
+        
+        method deallocate takes nothing returns nothing
+            set .iFreeInstanceSize=.iFreeInstanceSize+0x01
+            set .aFreeInstance[.iFreeInstanceSize-0x01]=this
+        endmethod
+        
+        static constant method fGetRunningInstances takes nothing returns integer
+            return .iInstanceSize-.iFreeInstanceSize
+        endmethod
+        
+        static constant method fGetInitializedInstances takes nothing returns integer
+            return .iInstanceSize
+        endmethod
+        
+        static constant method fGetFreeInstances takes nothing returns integer
+            return .iFreeInstanceSize
+        endmethod
+    endmodule
+endlibrary

@@ -1,0 +1,135 @@
+library Deferred
+    //! runtextmacro Array("Cache","boolexpr","null","8190","")
+    //! runtextmacro Array("Ref","Deferred","-1","8190","")
+
+    private struct Cache extends array
+        static Deferred Context = -1
+    
+        static method addToCache takes Deferred ctx, boolexpr filter returns boolexpr
+            call CacheArray.push(filter)
+            call RefArray.push(ctx)
+            
+            return filter
+        endmethod
+        
+        static method freeFromCacheMapping takes nothing returns boolean
+            if (CacheArray.Offset > 0) then
+                 set CacheArray[RefArray.Index - CacheArray.Offset] = CacheArray[RefArray.Index]
+            endif
+        
+            if (thistype.Context == RefArray.Context) then
+                set CacheArray.Offset = CacheArray.Offset + 1
+            
+                return false
+            endif
+            
+            return true
+        endmethod
+        
+        static method freeFromCache takes Deferred ctx returns nothing
+            set CacheArray.Offset = 0
+            set thistype.Context = ctx
+        
+            call RefArray.map(function thistype.freeFromCacheMapping)
+            set CacheArray.iIndex = CacheArray.iIndex - CacheArray.Offset
+        endmethod
+    endstruct
+    
+    private struct State extends array
+        implement InstanceHandler
+        
+        private trigger tCallback
+        private Deferred oContext
+        
+        static method get takes Deferred ctx returns thistype
+            local thistype new = thistype.allocate()
+            
+            set new.tCallback = CreateTrigger()
+            set new.oContext = ctx
+            
+            return new
+        endmethod
+        
+        method add takes code fn returns Deferred
+            call TriggerAddCondition(this.tCallback,Cache.addToCache(this.oContext,Filter(fn)))
+        
+            return this.oContext
+        endmethod
+        
+        method execute takes nothing returns nothing
+            set Deferred.Context = this.oContext
+            call TriggerExecute(this.tCallback)
+        endmethod
+        
+        method remove takes nothing returns nothing
+            call DestroyTrigger(this.tCallback)
+            
+            set this.tCallback = null
+        endmethod
+    endstruct
+
+    struct Deferred extends array 
+        static thistype Context = -1
+    
+        implement InstanceHandler
+    
+        private State sSuccess   
+        private State sFailure
+        private State sAlways
+        private thistype oNext
+        
+        private static method nextFn takes nothing returns nothing
+            call Deferred.Context.resolve()
+        endmethod
+        
+        static method operator new takes nothing returns thistype
+            local thistype new = thistype.allocate()
+            
+            set new.sSuccess = State.get(new)
+            set new.sFailure = State.get(new)
+            set new.sAlways = State.get(new)
+            set new.oNext = -1
+            
+            return new
+        endmethod
+        
+        method next takes nothing returns thistype
+            if (this.oNext == -1) then
+                set this.oNext = thistype.new
+                
+                call this.always(function thistype.nextFn)
+            endif
+            
+            return this.oNext
+        endmethod
+        
+        method done takes code fn returns thistype
+            return sSuccess.add(fn)
+        endmethod
+        
+        method fail takes code fn returns thistype
+            return sFailure.add(fn)
+        endmethod
+        
+        method always takes code fn returns thistype
+            return sAlways.add(fn)
+        endmethod
+        
+        method resolve takes nothing returns nothing
+            call this.sSuccess.execute()
+            call this.sAlways.execute()
+        endmethod
+        
+        method reject takes nothing returns nothing
+            call this.sFailure.execute()
+            call this.sAlways.execute()
+        endmethod
+        
+        method destroy takes nothing returns nothing
+            call Cache.freeFromCache(this)
+            call this.sSuccess.remove()
+            call this.sFailure.remove()
+            call this.sAlways.remove()
+        endmethod
+    endstruct
+endlibrary

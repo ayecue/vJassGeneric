@@ -1,0 +1,43 @@
+library Timer
+    struct Timer extends array
+        implement InstanceHandler
+        
+        static Object Context
+        
+        timer tHandle
+        Deferred dPromise
+        
+        static method operator new takes nothing returns thistype
+            local thistype new = thistype.allocate()
+            
+            set new.tHandle = CreateTimer()
+            set new.dPromise = -1
+            
+            return new
+        endmethod
+        
+        static method release takes nothing returns boolean
+            
+        
+            return false
+        endmethod
+        
+        method start takes real time,boolean periodic returns Deferred
+            if (new.dPromise != -1) then
+                call new.dPromise.reject()
+                call new.dPromise.destroy()
+            endif
+            
+            set new.dPromise = Deferred.new
+            //set thistype.Context[]
+            
+            call TimerStart(new.tHandle,time,periodic,function thistype.release)
+            
+            return new.dPromise
+        endmethod
+        
+        static method onInit takes nothing returns nothing
+            set thistype.Context = Object.new
+        endmethod
+    endstruct
+endlibrary

@@ -1,0 +1,49 @@
+library String
+    //! runtextmacro Array("String","string","\"\"","8190","")
+
+    struct String extends array
+        implement InstanceHandler
+        
+        string sChars
+        
+        static method create takes string str returns thistype
+            local thistype new = thistype.allocate()
+            
+            set new.sChars = str
+            
+            return new
+        endmethod
+        
+        method split takes string seperator returns nothing
+            local integer max = StringLength(this.sChars)
+            local integer seperatorLength
+            local integer last
+            local integer current
+            
+            set StringArray.iIndex = 0
+            
+            if (max > 0) then
+                set seperatorLength = StringLength(seperator)
+                set last = 0
+                set current = 0
+                
+                loop
+                    exitwhen max == current
+                    
+                    if (SubString(this.sChars,current,current + seperatorLength) == seperator) then
+                        call StringArray.push(SubString(this.sChars,last + seperatorLength,current))
+                        set last = current
+                    endif
+                    
+                    set current = current + 1
+                endloop
+                
+                if (last == 0) then
+                    call StringArray.push(SubString(this.sChars,last,current))
+                else
+                    call StringArray.push(SubString(this.sChars,last + seperatorLength,current))
+                endif
+            endif
+        endmethod
+    endstruct
+endlibrary

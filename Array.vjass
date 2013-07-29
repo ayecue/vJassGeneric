@@ -1,0 +1,155 @@
+library Array
+    //! textmacro Array takes NAME,TYPE,NIL,LIMIT,DEPS
+    struct $NAME$Array extends array
+        $DEPS$
+    
+        static $TYPE$ array aCtx
+        static integer iIndex = 0
+        
+        static $TYPE$ Context = $NIL$
+        static $TYPE$ MappingContext = $NIL$
+        static integer Index = -1
+        static integer Offset = -1
+        
+        static method operator [] takes integer index returns $TYPE$
+            if (index > -1 and index < thistype.iIndex) then
+                return thistype.aCtx[index]
+            endif
+            
+            return $NIL$
+        endmethod
+        
+        static method operator []= takes integer index, $TYPE$ value returns nothing
+            if (index > -1 and index < thistype.iIndex) then
+                set thistype.aCtx[iIndex] = value
+            endif
+        endmethod
+        
+        static method operator length takes nothing returns integer
+            return thistype.iIndex
+        endmethod
+        
+        static method operator full takes nothing returns boolean
+            return thistype.iIndex == $LIMIT$
+        endmethod
+        
+        static method operator empty takes nothing returns boolean
+            return thistype.iIndex == 0
+        endmethod
+        
+        static method free takes code fn returns nothing
+            call thistype.map(fn)
+            set thistype.iIndex = 0
+        endmethod
+        
+        private static method removeMapping takes nothing returns boolean
+            return thistype.MappingContext != thistype.Context
+        endmethod
+        
+        static method remove takes $TYPE$ ctx returns nothing
+            set thistype.MappingContext = ctx
+            call thistype.map(function thistype.removeMapping)
+        endmethod
+        
+        static method map takes code fn returns nothing
+            local Function check
+            
+            if (not thistype.empty) then
+                set thistype.Index = 0
+                set thistype.Offset = 0
+                set check = Function.new(fn)
+                
+                loop
+                    exitwhen thistype.iIndex == thistype.Index
+                    
+                    set thistype.Context = thistype[thistype.Index]
+                    
+                    if (thistype.Offset > 0) then
+                        set thistype[thistype.Index - thistype.Offset] = thistype[thistype.Index]
+                        set thistype[thistype.Index] = $NIL$
+                    endif
+                    
+                    if (not check.eval()) then
+                        set thistype.Offset = thistype.Offset + 1
+                    endif
+
+                    set thistype.Index = thistype.Index + 1
+                endloop
+                
+                set thistype.iIndex = thistype.iIndex - thistype.Offset
+                call check.remove()
+            endif
+        endmethod
+        
+        static method push takes $TYPE$ new returns integer
+            if (not thistype.full) then
+                set thistype[thistype.iIndex] = new
+                set thistype.iIndex = thistype.iIndex + 1
+            debug else
+            debug call BJDebugMsg("Error: Invalid array size.");
+            endif
+            
+            return thistype.iIndex
+        endmethod
+        
+        static method pop takes nothing returns $TYPE$            
+            if (not thistype.empty) then
+                set thistype.iIndex = thistype.iIndex - 1
+                
+                return thistype[thistype.iIndex]
+            debug else
+            debug call BJDebugMsg("Error: Invalid array size.");
+            endif
+            
+            return $NIL$
+        endmethod
+        
+        static method unshift takes $TYPE$ new returns integer
+            local integer index
+            
+            if (not thistype.full) then
+                set index = thistype.iIndex
+            
+                loop
+                    set index = index - 1
+                    set thistype[index + 1] = thistype[index]
+                    
+                    exitwhen index == 0
+                endloop
+                
+                set thistype[0] = new
+                set thistype.iIndex = thistype.iIndex + 1
+            debug else
+            debug call BJDebugMsg("Error: Invalid array size.");
+            endif
+            
+            return thistype.iIndex
+        endmethod
+        
+        static method shift takes nothing returns $TYPE$
+            local integer index
+            local $TYPE$ first
+            
+            if (not thistype.empty) then
+                set index = 0
+                set first = thistype[0]
+                
+                loop
+                    exitwhen thistype.iIndex == index
+                    
+                    set thistype[index] = thistype[index + 1]
+                    set index = index + 1
+                endloop
+                
+                set thistype.iIndex = thistype.iIndex - 1
+                
+                return first
+            debug else
+            debug call BJDebugMsg("Error: Invalid array size.");
+            endif
+            
+            return $NIL$
+        endmethod
+    endstruct
+    //! endtextmacro
+endlibrary

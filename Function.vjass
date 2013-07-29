@@ -1,0 +1,49 @@
+library Function requires InstanceHandler
+    struct Function extends array
+        implement InstanceHandler
+
+        static trigger tCallback = CreateTrigger()
+        
+        boolexpr bFn
+        
+        static method new takes code fn returns thistype
+            local thistype new = thistype.allocate()
+            
+            set new.bFn = Filter(fn)
+            
+            return new
+        endmethod
+        
+        static method extended takes boolexpr fn returns thistype
+            local thistype new = thistype.allocate()
+            
+            set new.bFn = fn
+            
+            return new
+        endmethod
+        
+        method exec takes nothing returns nothing
+            local triggercondition tAction = TriggerAddCondition(thistype.tCallback,this.bFn)
+            
+            call TriggerExecute(thistype.tCallback)
+            call TriggerRemoveCondition(thistype.tCallback,tAction)
+            
+            set tAction = null
+        endmethod
+        
+        method eval takes nothing returns boolean
+            local triggercondition tCondition = TriggerAddCondition(thistype.tCallback,this.bFn)
+            local boolean result = TriggerEvaluate(thistype.tCallback)
+            
+            call TriggerRemoveCondition(thistype.tCallback,tCondition)
+            set tCondition = null
+            
+            return result
+        endmethod
+        
+        method remove takes nothing returns nothing
+            set this.bFn = null
+            call this.deallocate()
+        endmethod
+    endstruct
+endlibrary

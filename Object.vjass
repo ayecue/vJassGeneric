@@ -1,0 +1,179 @@
+library Object requires InstanceHandler
+    //! textmacro ObjectTypeBasic takes NAME,TYPE,FUNC,SETGET
+    struct $NAME$API extends array
+        method has takes string prop returns boolean
+            return HaveSaved$FUNC$(Object.hCache, this, StringHash(prop))
+        endmethod
+
+        method operator []= takes string prop, $TYPE$ value returns nothing
+            call Save$SETGET$(Object.hCache, this, StringHash(prop), value)
+        endmethod
+
+        method operator [] takes string prop returns $TYPE$
+            return Load$SETGET$(Object.hCache, this, StringHash(prop))
+        endmethod
+
+        method remove takes string prop returns nothing
+            call RemoveSaved$FUNC$(Object.hCache, this, StringHash(prop))
+        endmethod
+    endstruct
+    private module $NAME$
+        method operator $TYPE$ takes nothing returns $NAME$API
+            return this
+        endmethod
+    endmodule
+    //! endtextmacro
+    
+    //! textmacro ObjectTypeHandle takes NAME,TYPE
+    struct $NAME$API extends array
+        method has takes string prop returns boolean
+            return HaveSavedHandle(Object.hCache, this, StringHash(prop))
+        endmethod
+    
+        method operator []= takes string prop, $TYPE$ value returns nothing
+            call Save$NAME$Handle(Object.hCache, this, StringHash(prop), value)
+        endmethod
+
+        method operator [] takes string prop returns $TYPE$
+            return Load$NAME$Handle(Object.hCache, this, StringHash(prop))
+        endmethod
+        
+        method remove takes string prop returns nothing
+            call RemoveSavedHandle(Object.hCache, this, StringHash(prop))
+        endmethod
+    endstruct
+    private module $NAME$
+        method operator $TYPE$ takes nothing returns $NAME$API
+            return this
+        endmethod
+    endmodule
+    //! endtextmacro
+    
+    //! runtextmacro ObjectTypeBasic("Integer","integer","Integer","Integer")
+    //! runtextmacro ObjectTypeBasic("Boolean","boolean","Boolean","Boolean")
+    //! runtextmacro ObjectTypeBasic("Real","real","Real","Real")
+    //! runtextmacro ObjectTypeBasic("String","string","String","Str")
+    
+    //! runtextmacro ObjectTypeHandle("Player", "player")
+    //! runtextmacro ObjectTypeHandle("Widget", "widget")
+    //! runtextmacro ObjectTypeHandle("Destructable", "destructable")
+    //! runtextmacro ObjectTypeHandle("Item", "item")
+    //! runtextmacro ObjectTypeHandle("Unit", "unit")
+    //! runtextmacro ObjectTypeHandle("Ability", "ability")
+    //! runtextmacro ObjectTypeHandle("Timer", "timer")
+    //! runtextmacro ObjectTypeHandle("Trigger", "trigger")
+    //! runtextmacro ObjectTypeHandle("TriggerCondition", "triggercondition")
+    //! runtextmacro ObjectTypeHandle("TriggerAction", "triggeraction")
+    //! runtextmacro ObjectTypeHandle("TriggerEvent", "event")
+    //! runtextmacro ObjectTypeHandle("Force", "force")
+    //! runtextmacro ObjectTypeHandle("Group", "group")
+    //! runtextmacro ObjectTypeHandle("Location", "location")
+    //! runtextmacro ObjectTypeHandle("Rect", "rect")
+    //! runtextmacro ObjectTypeHandle("BooleanExpr", "boolexpr")
+    //! runtextmacro ObjectTypeHandle("Sound", "sound")
+    //! runtextmacro ObjectTypeHandle("Effect", "effect")
+    //! runtextmacro ObjectTypeHandle("UnitPool", "unitpool")
+    //! runtextmacro ObjectTypeHandle("ItemPool", "itempool")
+    //! runtextmacro ObjectTypeHandle("Quest", "quest")
+    //! runtextmacro ObjectTypeHandle("QuestItem", "questitem")
+    //! runtextmacro ObjectTypeHandle("DefeatCondition", "defeatcondition")
+    //! runtextmacro ObjectTypeHandle("TimerDialog", "timerdialog")
+    //! runtextmacro ObjectTypeHandle("Leaderboard", "leaderboard")
+    //! runtextmacro ObjectTypeHandle("Multiboard", "multiboard")
+    //! runtextmacro ObjectTypeHandle("MultiboardItem", "multiboarditem")
+    //! runtextmacro ObjectTypeHandle("Trackable", "trackable")
+    //! runtextmacro ObjectTypeHandle("Dialog", "dialog")
+    //! runtextmacro ObjectTypeHandle("Button", "button")
+    //! runtextmacro ObjectTypeHandle("TextTag", "texttag")
+    //! runtextmacro ObjectTypeHandle("Lightning", "lightning")
+    //! runtextmacro ObjectTypeHandle("Image", "image")
+    //! runtextmacro ObjectTypeHandle("Ubersplat", "ubersplat")
+    //! runtextmacro ObjectTypeHandle("Region", "region")
+    //! runtextmacro ObjectTypeHandle("FogState", "fogstate")
+    //! runtextmacro ObjectTypeHandle("FogModifier", "fogmodifier")
+
+    struct Object extends array
+        implement InstanceHandler
+    
+        implement Integer
+        implement Boolean
+        implement Real
+        implement String
+        
+        implement Player
+        implement Widget
+        implement Destructable
+        implement Item
+        implement Unit
+        implement Ability
+        implement Timer
+        implement Trigger
+        implement TriggerCondition
+        implement TriggerAction
+        implement TriggerEvent
+        implement Force
+        implement Group
+        implement Location
+        implement Rect
+        implement BooleanExpr
+        implement Sound
+        implement Effect
+        implement UnitPool
+        implement ItemPool
+        implement Quest
+        implement QuestItem
+        implement DefeatCondition
+        implement TimerDialog
+        implement Leaderboard
+        implement Multiboard
+        implement MultiboardItem
+        implement Trackable
+        implement Dialog
+        implement Button
+        implement TextTag
+        implement Lightning
+        implement Image
+        implement Ubersplat
+        implement Region
+        implement FogState
+        implement FogModifier
+        
+        static hashtable hCache
+        
+        static method operator new takes nothing returns thistype
+            return thistype.allocate()
+        endmethod
+        
+        method operator [] takes string prop returns Object
+            return LoadInteger(thistype.hCache, this, StringHash(prop))
+        endmethod
+    
+        method operator []= takes string prop, Object object returns nothing
+            call SaveInteger(thistype.hCache, this, StringHash(prop), object)
+        endmethod
+    
+        method has takes string prop returns boolean
+            return HaveSavedInteger(thistype.hCache, this, StringHash(prop))
+        endmethod
+    
+        method remove takes string prop returns nothing
+            call RemoveSavedInteger(thistype.hCache, this, StringHash(prop))
+        endmethod
+        
+        static method onInit takes nothing returns nothing
+            set thistype.hCache = Hashtable.new
+        endmethod
+    endstruct
+    
+    //! runtextmacro Array("Object","Object","-1","8190","implement ObjectFactory")
+    
+    module ObjectFactory
+        static method get takes nothing returns Object
+            local Object new = Object.new
+            
+            call thistype.push(new)
+            
+            return new
+        endmethod
+    endmodule
+endlibrary
