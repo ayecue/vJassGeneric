@@ -6,7 +6,7 @@ library String
         
         string sChars
         
-        static method create takes string str returns thistype
+        static method new takes string str returns thistype
             local thistype new = thistype.allocate()
             
             set new.sChars = str

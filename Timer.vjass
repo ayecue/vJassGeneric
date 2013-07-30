@@ -1,11 +1,13 @@
-library Timer
+library Timer requires Object
     struct Timer extends array
         implement InstanceHandler
+		implement ObjectCache
         
-        static Object Context
+        static thistype Context = -1
         
         timer tHandle
         Deferred dPromise
+		boolean bPeriodic
         
         static method operator new takes nothing returns thistype
             local thistype new = thistype.allocate()
@@ -16,28 +18,56 @@ library Timer
             return new
         endmethod
         
-        static method release takes nothing returns boolean
+        private static method release takes nothing returns boolean
+            local timer tHandle = GetExpiredTimer()
+			local thistype ctx = thistype.get(tHandle)
             
+            set thistype.Context = ctx
+			call ctx.dPromise.resolve()
+			
+			if (not ctx.bPeriodic) then
+				call ctx.dPromise.destroy()
+			endif
+			
+			set tHandle = null
         
             return false
         endmethod
         
         method start takes real time,boolean periodic returns Deferred
-            if (new.dPromise != -1) then
-                call new.dPromise.reject()
-                call new.dPromise.destroy()
+            if (this.dPromise != -1) then
+                call this.dPromise.reject()
+                call this.dPromise.destroy()
             endif
             
-            set new.dPromise = Deferred.new
-            //set thistype.Context[]
+            set this.dPromise = Deferred.new
+			set this.bPeriodic = periodic
+            call thistype.def(this.tHandle,this)
             
-            call TimerStart(new.tHandle,time,periodic,function thistype.release)
+            call TimerStart(this.tHandle,time,periodic,function thistype.release)
             
-            return new.dPromise
+            return this.dPromise
         endmethod
-        
-        static method onInit takes nothing returns nothing
-            set thistype.Context = Object.new
-        endmethod
+		
+		method stop takes nothing returns nothing
+			if (this.dPromise != -1) then
+                call this.dPromise.reject()
+                call this.dPromise.destroy()
+            endif
+			
+			call PauseTimer(this.tHandle)
+		endmethod
+		
+		method operator elapsed takes nothing returns real
+			return TimerGetElapsed(this.tHandle)
+		endmethod
+		
+		method operator remaining takes nothing returns real
+			return TimerGetRemaining(this.tHandle)
+		endmethod
+		
+		method operator timeout takes nothing returns real
+			return TimerGetTimeout(this.tHandle)
+		endmethod
     endstruct
 endlibrary

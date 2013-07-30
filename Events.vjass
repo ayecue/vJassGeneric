@@ -1,0 +1,19 @@
+library fx
+    
+
+    struct Event extends array
+        implement HashtableCache
+        
+        static integer Context = -1
+        static eventid EventID = null
+        static Deferred TriggeringPromise = -1
+        
+        static unit TrainedUnit = null
+        static integer TrainedUnitType = -1
+        static unit TransportedUnit = null
+        static unit TriggerUnit = null
+        static widget TriggerWidget = null
+        
+        static player TriggerPlayer = null
+    endstruct
+endlibrary

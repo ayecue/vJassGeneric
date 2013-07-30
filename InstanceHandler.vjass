@@ -1,37 +1,196 @@
-library InstanceHandler
-    module InstanceHandler
-        static thistype array aFreeInstance
-        static integer iFreeInstanceSize=0x00
-        static integer iInstanceSize    =0x00
-        
-        static method allocate takes nothing returns integer
-            if (.iFreeInstanceSize>0x00) then
-                set .iFreeInstanceSize=.iFreeInstanceSize-0x01
-                return .aFreeInstance[.iFreeInstanceSize]
-            debug elseif (.iInstanceSize==JASS_MAX_ARRAY_SIZE) then
-            debug call BJDebugMsg("InstanceHandler: Instance size over 8190")
-            debug return -0x01
-            endif
-            
-            set .iInstanceSize=.iInstanceSize+0x01
-            return .iInstanceSize-0x01
+library Object requires InstanceHandler
+    //! textmacro ObjectTypeBasic takes NAME,TYPE,FUNC,SETGET
+    struct $NAME$API extends array
+        method has takes integer prop returns boolean
+            return HaveSaved$FUNC$(Object.Cache, this, prop)
         endmethod
-        
-        method deallocate takes nothing returns nothing
-            set .iFreeInstanceSize=.iFreeInstanceSize+0x01
-            set .aFreeInstance[.iFreeInstanceSize-0x01]=this
+
+        method operator []= takes integer prop, $TYPE$ value returns nothing
+            call Save$SETGET$(Object.Cache, this, prop, value)
         endmethod
-        
-        static constant method fGetRunningInstances takes nothing returns integer
-            return .iInstanceSize-.iFreeInstanceSize
+
+        method operator [] takes integer prop returns $TYPE$
+            return Load$SETGET$(Object.Cache, this, prop)
         endmethod
-        
-        static constant method fGetInitializedInstances takes nothing returns integer
-            return .iInstanceSize
+
+        method remove takes integer prop returns nothing
+            call RemoveSaved$FUNC$(Object.Cache, this, prop)
         endmethod
-        
-        static constant method fGetFreeInstances takes nothing returns integer
-            return .iFreeInstanceSize
+    endstruct
+    private module $NAME$
+        method operator $TYPE$ takes nothing returns $NAME$API
+            return this
         endmethod
     endmodule
+    //! endtextmacro
+    
+    //! textmacro ObjectTypeHandle takes NAME,TYPE
+    struct $NAME$API extends array
+        method has takes integer prop returns boolean
+            return HaveSavedHandle(Object.Cache, this, prop)
+        endmethod
+    
+        method operator []= takes integer prop, $TYPE$ value returns nothing
+            call Save$NAME$Handle(Object.Cache, this, prop, value)
+        endmethod
+
+        method operator [] takes integer prop returns $TYPE$
+            return Load$NAME$Handle(Object.Cache, this, prop)
+        endmethod
+        
+        method remove takes integer prop returns nothing
+            call RemoveSavedHandle(Object.Cache, this, prop)
+        endmethod
+    endstruct
+    private module $NAME$
+        method operator $TYPE$ takes nothing returns $NAME$API
+            return this
+        endmethod
+    endmodule
+    //! endtextmacro
+    
+    //! runtextmacro ObjectTypeBasic("Integer","integer","Integer","Integer")
+    //! runtextmacro ObjectTypeBasic("Boolean","boolean","Boolean","Boolean")
+    //! runtextmacro ObjectTypeBasic("Real","real","Real","Real")
+    //! runtextmacro ObjectTypeBasic("String","string","String","Str")
+    
+    //! runtextmacro ObjectTypeHandle("Player", "player")
+    //! runtextmacro ObjectTypeHandle("Widget", "widget")
+    //! runtextmacro ObjectTypeHandle("Destructable", "destructable")
+    //! runtextmacro ObjectTypeHandle("Item", "item")
+    //! runtextmacro ObjectTypeHandle("Unit", "unit")
+    //! runtextmacro ObjectTypeHandle("Ability", "ability")
+    //! runtextmacro ObjectTypeHandle("Timer", "timer")
+    //! runtextmacro ObjectTypeHandle("Trigger", "trigger")
+    //! runtextmacro ObjectTypeHandle("TriggerCondition", "triggercondition")
+    //! runtextmacro ObjectTypeHandle("TriggerAction", "triggeraction")
+    //! runtextmacro ObjectTypeHandle("TriggerEvent", "event")
+    //! runtextmacro ObjectTypeHandle("Force", "force")
+    //! runtextmacro ObjectTypeHandle("Group", "group")
+    //! runtextmacro ObjectTypeHandle("Location", "location")
+    //! runtextmacro ObjectTypeHandle("Rect", "rect")
+    //! runtextmacro ObjectTypeHandle("BooleanExpr", "boolexpr")
+    //! runtextmacro ObjectTypeHandle("Sound", "sound")
+    //! runtextmacro ObjectTypeHandle("Effect", "effect")
+    //! runtextmacro ObjectTypeHandle("UnitPool", "unitpool")
+    //! runtextmacro ObjectTypeHandle("ItemPool", "itempool")
+    //! runtextmacro ObjectTypeHandle("Quest", "quest")
+    //! runtextmacro ObjectTypeHandle("QuestItem", "questitem")
+    //! runtextmacro ObjectTypeHandle("DefeatCondition", "defeatcondition")
+    //! runtextmacro ObjectTypeHandle("TimerDialog", "timerdialog")
+    //! runtextmacro ObjectTypeHandle("Leaderboard", "leaderboard")
+    //! runtextmacro ObjectTypeHandle("Multiboard", "multiboard")
+    //! runtextmacro ObjectTypeHandle("MultiboardItem", "multiboarditem")
+    //! runtextmacro ObjectTypeHandle("Trackable", "trackable")
+    //! runtextmacro ObjectTypeHandle("Dialog", "dialog")
+    //! runtextmacro ObjectTypeHandle("Button", "button")
+    //! runtextmacro ObjectTypeHandle("TextTag", "texttag")
+    //! runtextmacro ObjectTypeHandle("Lightning", "lightning")
+    //! runtextmacro ObjectTypeHandle("Image", "image")
+    //! runtextmacro ObjectTypeHandle("Ubersplat", "ubersplat")
+    //! runtextmacro ObjectTypeHandle("Region", "region")
+    //! runtextmacro ObjectTypeHandle("FogState", "fogstate")
+    //! runtextmacro ObjectTypeHandle("FogModifier", "fogmodifier")
+
+    struct Object extends array
+        implement InstanceHandler
+		implement HashtableCache
+    
+        implement Integer
+        implement Boolean
+        implement Real
+        implement String
+        
+        implement Player
+        implement Widget
+        implement Destructable
+        implement Item
+        implement Unit
+        implement Ability
+        implement Timer
+        implement Trigger
+        implement TriggerCondition
+        implement TriggerAction
+        implement TriggerEvent
+        implement Force
+        implement Group
+        implement Location
+        implement Rect
+        implement BooleanExpr
+        implement Sound
+        implement Effect
+        implement UnitPool
+        implement ItemPool
+        implement Quest
+        implement QuestItem
+        implement DefeatCondition
+        implement TimerDialog
+        implement Leaderboard
+        implement Multiboard
+        implement MultiboardItem
+        implement Trackable
+        implement Dialog
+        implement Button
+        implement TextTag
+        implement Lightning
+        implement Image
+        implement Ubersplat
+        implement Region
+        implement FogState
+        implement FogModifier
+        
+        static method operator new takes nothing returns thistype
+            return thistype.allocate()
+        endmethod
+        
+        method operator [] takes integer prop returns Object
+            return LoadInteger(thistype.Cache, this, prop)
+        endmethod
+    
+        method operator []= takes integer prop, Object object returns nothing
+            call SaveInteger(thistype.Cache, this, prop, object)
+        endmethod
+    
+        method has takes integer prop returns boolean
+            return HaveSavedInteger(thistype.Cache, this, prop)
+        endmethod
+    
+        method remove takes integer prop returns nothing
+            call RemoveSavedInteger(thistype.Cache, this, prop)
+        endmethod
+    endstruct
+    
+    //! runtextmacro Array("Object","Object","-1","8190","implement ObjectFactory")
+    
+    module ObjectFactory
+        static method get takes nothing returns Object
+            local Object new = Object.new
+            
+            call thistype.push(new)
+            
+            return new
+        endmethod
+    endmodule
+	
+	module ObjectCache
+		static Object Cache
+	
+		static method get takes handle object returns thistype
+			local integer id = GetHandleId(object)
+		
+			if (thistype.Cache.has(id)) then
+				return thistype.Cache[id]
+			endif
+			
+			return -1
+		endmethod
+	
+		static method def takes handle object,thistype ctx returns nothing
+			set thistype.Cache[GetHandleId(object)] = ctx
+		endmethod
+		
+		static method onInit takes nothing returns nothing
+            set thistype.Cache = Object.new
+        endmethod
+	endmodule
 endlibrary

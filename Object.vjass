@@ -1,20 +1,20 @@
 library Object requires InstanceHandler
     //! textmacro ObjectTypeBasic takes NAME,TYPE,FUNC,SETGET
     struct $NAME$API extends array
-        method has takes string prop returns boolean
-            return HaveSaved$FUNC$(Object.hCache, this, StringHash(prop))
+        method has takes integer prop returns boolean
+            return HaveSaved$FUNC$(Object.Cache, this, prop)
         endmethod
 
-        method operator []= takes string prop, $TYPE$ value returns nothing
-            call Save$SETGET$(Object.hCache, this, StringHash(prop), value)
+        method operator []= takes integer prop, $TYPE$ value returns nothing
+            call Save$SETGET$(Object.Cache, this, prop, value)
         endmethod
 
-        method operator [] takes string prop returns $TYPE$
-            return Load$SETGET$(Object.hCache, this, StringHash(prop))
+        method operator [] takes integer prop returns $TYPE$
+            return Load$SETGET$(Object.Cache, this, prop)
         endmethod
 
-        method remove takes string prop returns nothing
-            call RemoveSaved$FUNC$(Object.hCache, this, StringHash(prop))
+        method remove takes integer prop returns nothing
+            call RemoveSaved$FUNC$(Object.Cache, this, prop)
         endmethod
     endstruct
     private module $NAME$
@@ -26,20 +26,20 @@ library Object requires InstanceHandler
     
     //! textmacro ObjectTypeHandle takes NAME,TYPE
     struct $NAME$API extends array
-        method has takes string prop returns boolean
-            return HaveSavedHandle(Object.hCache, this, StringHash(prop))
+        method has takes integer prop returns boolean
+            return HaveSavedHandle(Object.Cache, this, prop)
         endmethod
     
-        method operator []= takes string prop, $TYPE$ value returns nothing
-            call Save$NAME$Handle(Object.hCache, this, StringHash(prop), value)
+        method operator []= takes integer prop, $TYPE$ value returns nothing
+            call Save$NAME$Handle(Object.Cache, this, prop, value)
         endmethod
 
-        method operator [] takes string prop returns $TYPE$
-            return Load$NAME$Handle(Object.hCache, this, StringHash(prop))
+        method operator [] takes integer prop returns $TYPE$
+            return Load$NAME$Handle(Object.Cache, this, prop)
         endmethod
         
-        method remove takes string prop returns nothing
-            call RemoveSavedHandle(Object.hCache, this, StringHash(prop))
+        method remove takes integer prop returns nothing
+            call RemoveSavedHandle(Object.Cache, this, prop)
         endmethod
     endstruct
     private module $NAME$
@@ -94,6 +94,7 @@ library Object requires InstanceHandler
 
     struct Object extends array
         implement InstanceHandler
+		implement HashtableCache
     
         implement Integer
         implement Boolean
@@ -138,30 +139,24 @@ library Object requires InstanceHandler
         implement FogState
         implement FogModifier
         
-        static hashtable hCache
-        
         static method operator new takes nothing returns thistype
             return thistype.allocate()
         endmethod
         
-        method operator [] takes string prop returns Object
-            return LoadInteger(thistype.hCache, this, StringHash(prop))
+        method operator [] takes integer prop returns Object
+            return LoadInteger(thistype.Cache, this, prop)
         endmethod
     
-        method operator []= takes string prop, Object object returns nothing
-            call SaveInteger(thistype.hCache, this, StringHash(prop), object)
+        method operator []= takes integer prop, Object object returns nothing
+            call SaveInteger(thistype.Cache, this, prop, object)
         endmethod
     
-        method has takes string prop returns boolean
-            return HaveSavedInteger(thistype.hCache, this, StringHash(prop))
+        method has takes integer prop returns boolean
+            return HaveSavedInteger(thistype.Cache, this, prop)
         endmethod
     
-        method remove takes string prop returns nothing
-            call RemoveSavedInteger(thistype.hCache, this, StringHash(prop))
-        endmethod
-        
-        static method onInit takes nothing returns nothing
-            set thistype.hCache = Hashtable.new
+        method remove takes integer prop returns nothing
+            call RemoveSavedInteger(thistype.Cache, this, prop)
         endmethod
     endstruct
     
@@ -176,4 +171,26 @@ library Object requires InstanceHandler
             return new
         endmethod
     endmodule
+	
+	module ObjectCache
+		static Object Cache
+	
+		static method get takes handle object returns thistype
+			local integer id = GetHandleId(object)
+		
+			if (thistype.Cache.has(id)) then
+				return thistype.Cache[id]
+			endif
+			
+			return -1
+		endmethod
+	
+		static method def takes handle object,thistype ctx returns nothing
+			set thistype.Cache[GetHandleId(object)] = ctx
+		endmethod
+		
+		static method onInit takes nothing returns nothing
+            set thistype.Cache = Object.new
+        endmethod
+	endmodule
 endlibrary

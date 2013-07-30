@@ -1,0 +1,4 @@
+library TimerRecycler
+    //! runtextmacro Array("Timer","Timer","-1","8190","")
+	//! runtextmacro Recycle("Timer","Timer","Timer.new","8190","-1")
+endlibrary

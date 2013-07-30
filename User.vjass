@@ -1,0 +1,48 @@
+library User
+    struct User extends array
+        implement InstanceHandler
+        
+        player pUser
+        integer iIndex
+        
+        static method new takes integer index returns thistype
+            local thistype new = thistype.allocate()
+            
+            set new.pUser = Player(index)
+            set new.iIndex = index
+            
+            return new
+        endmethod
+        
+        method operator name= takes string str returns nothing
+            call SetPlayerName(this.pUser,str)
+        endmethod
+        
+        method operator name takes nothing returns string
+            return GetPlayerName(this.pUser)
+        endmethod
+        
+        method operator index takes nothing returns integer
+            return this.iIndex
+        endmethod
+        
+        method operator color takes nothing returns playercolor
+            return GetPlayerColor(this.pUser)
+        endmethod
+    endstruct
+
+    //! runtextmacro Array("User","User","-1","16","implement UserPlugin")
+    
+    module UserPlugin
+        static method onInit takes nothing returns nothing
+            local integer index = bj_MAX_PLAYERS
+            
+            loop
+                set index = index - 1
+                call thistype.push(User.new(index))
+                
+                exitwhen index == 0
+            endloop
+        endmethod
+    endmodule
+endlibrary

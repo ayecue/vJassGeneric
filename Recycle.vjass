@@ -1,0 +1,25 @@
+library Recycle
+	//! textmacro Recycle takes NAME,TYPE,CREATE,LIMIT,NIL
+	struct $NAME$Recycle extends array
+		static integer iInstances = 0
+	
+		static method operator new takes nothing returns $TYPE$
+			if (not $NAME$Array.empty) then
+				return $NAME$Array.pop()
+			elseif (thistype.iInstances < $LIMIT$) then
+				set thistype.iInstances = thistype.iInstances + 1
+				
+				return $CREATE$
+			endif
+			
+			return $NIL$
+		endmethod
+		
+		static method release takes $TYPE$ ctx returns nothing
+			if (not $NAME$Array.full) then
+				call $NAME$Array.push(ctx)
+			endif
+		endmethod
+	endstruct
+	//! endtextmacro
+endlibrary
